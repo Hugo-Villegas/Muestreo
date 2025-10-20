@@ -1,0 +1,123 @@
+---
+title: "Muestreo"
+author: "Hugo Villegas"
+date: "2025-10-14"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Carga de librerías.
+
+```{r LIBRERIAS, warning=FALSE, message=FALSE}
+library(dplyr)
+library(sampling)
+```
+
+## R Muestreo Aleatorio Simple.
+
+Utilizaremos la función **slice_sample** que es de la libreria **Sampling** para el muestreo aleatorio simple (muestreo sin reemplazo).
+
+A continuación cargamos los datos..
+
+```{r}
+
+data <- rio::import("Base.xlsx")
+dim(data)
+head(data,5)
+```
+
+```{r}
+set.seed(109)
+muestra_aleat <- slice_sample(.data = data, n=8, replace = FALSE)
+muestra_aleat
+
+```
+
+## Muestreo aleatorio estratificado. 
+
+
+El muestreo aleatorio estratificado es una técnica que se utiliza cuando la población que vas a estudiar no es homogénea, es decir, tiene grupos internos (subpoblaciones) muy diferentes entre sí.
+
+El muestreo aleatorio estratificado es una técnica que se utiliza cuando la población que vas a estudiar no es homogénea, es decir, tiene grupos internos (subpoblaciones) muy diferentes entre sí.
+
+En términos sencillos:
+
+Divides la población en "estratos" (subgrupos). Los elementos dentro de cada estrato deben ser lo más parecidos posible entre sí, y los estratos deben ser lo más diferentes posible entre ellos.
+
+Ejemplo: Si estudias el gasto en tecnología, puedes dividir a la gente por Nivel de Ingreso (Bajo, Medio, Alto).
+
+omas una muestra aleatoria simple de CADA estrato. Haces un sorteo justo dentro del grupo de "Ingreso Bajo", otro sorteo en "Ingreso Medio", y así sucesivamente.
+
+Aseguras la representación. Esto garantiza que todos los grupos importantes (estratos) estén representados en la muestra final, lo que da resultados más precisos que un muestreo aleatorio simple sobre toda la población.
+
+El muestreo aleatorio estratificado es una técnica que se utiliza cuando la población que vas a estudiar no es homogénea, es decir, tiene grupos internos (subpoblaciones) muy diferentes entre sí.
+
+Aplicación en R
+
+Para aplicar el muestreo estratificado de forma sencilla en R, la mejor herramienta es la librería dplyr (parte del ecosistema tidyverse) con las funciones group_by() y slice_sample().
+
+```{r}
+# Instalar y cargar dplyr (si no lo has hecho)
+# install.packages("dplyr") 
+library(dplyr)
+
+# Usaremos el data frame 'iris' como ejemplo
+data(iris)
+
+# La columna 'Species' (Especie) será nuestro ESTRATO 
+# (tiene 3 especies: setosa, versicolor, virginica)
+head(table(iris$Species),5)
+# setosa versicolor virginica 
+#     50         50         50
+```
+### Muestreo estratificado por cantidad.
+
+Si se quiere seleccionar la misma cantidad en cada estrato.
+
+```{r}
+# Queremos 10 filas de CADA especie
+n_por_estrato <- 10
+
+set.seed(42) # Para reproducibilidad
+
+muestra_uniforme <- iris %>% 
+  group_by(Species) %>% 
+  slice_sample(n = n_por_estrato) %>%  
+  ungroup() # Desagrupar al final es una buena práctica
+
+# Verificamos que se seleccionaron 10 de cada uno:
+table(muestra_uniforme$Species)
+# setosa versicolor virginica 
+#     10         10         10
+```
+
+
+### Muestreo estratificado por proporción
+
+Si quieres seleccionar un porcentaje o fracción de cada estrato, de modo que la muestra mantenga la misma proporción que la población (afijación proporcional).
+
+En el caso del dataset iris, las proporciones son iguales (50/50/50), pero el código es útil para cualquier proporción.
+
+
+```{r}
+# Queremos el 20% (frac = 0.20) de las filas de CADA especie
+fraccion_por_estrato <- 0.20
+
+set.seed(42) # Para reproducibilidad
+
+muestra_proporcional <- iris %>% 
+  group_by(Species) %>%  
+  slice_sample(prop = fraccion_por_estrato) %>%  
+  ungroup()
+
+# Verificamos los tamaños de la muestra (50 * 0.20 = 10 para cada uno):
+table(muestra_proporcional$Species)
+# setosa versicolor virginica 
+#     10         10         10
+```
+
